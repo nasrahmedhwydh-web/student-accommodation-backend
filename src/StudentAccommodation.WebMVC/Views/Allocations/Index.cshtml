@@ -1,0 +1,730 @@
+@model List<StudentAccommodation.Domain.Entities.Bed>
+@{
+    Layout = null;
+    var allRequests = ViewBag.Requests as List<StudentAccommodation.Domain.Entities.AccommodationRequest> ?? new();
+    
+    // الطلاب الجاهزون للتسكين (المعتمدون مالياً ولم يتم تسكينهم في أي سرير بعد)
+    var occupiedStudentIds = Model != null ? Model.Where(b => b.IsOccupied && !string.IsNullOrEmpty(b.CurrentStudentId)).Select(b => b.CurrentStudentId).ToList() : new List<string?>();
+    var readyStudents = allRequests.Where(r => r.FinanceStatus == "Approved" && !occupiedStudentIds.Any(o => o != null && (o.Contains(r.StudentId) || (r.Student != null && o.Contains(r.Student.Name))))).ToList();
+    
+    int vacantCount = Model != null ? Model.Count(b => !b.IsOccupied) : 16;
+}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>إدارة تسكين الطلاب وتوزيع الأسرة - سَكَنُ الطلاب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+        }
+
+        html, body {
+            background-color: #0E1E70 !important;
+            color: #ffffff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            direction: rtl;
+        }
+
+        .dashboard-container {
+            display: flex;
+            flex-direction: row;
+            min-height: 100vh;
+            background-color: #0E1E70;
+        }
+
+        /* 1. القائمة الجانبية */
+        .sidebar {
+            width: 250px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 18px 24px 18px;
+            flex-shrink: 0;
+            min-height: 100vh;
+            box-shadow: -4px 0 25px rgba(0,0,0,0.06);
+            z-index: 10;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            padding: 0 4px 34px 4px;
+        }
+
+        .brand-cube {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(145deg, #0284c7, #2563eb);
+            clip-path: polygon(20% 0%, 100% 15%, 80% 100%, 0% 85%);
+            border-radius: 6px;
+        }
+
+        .brand-titles h1 {
+            font-size: 18px;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1.1;
+        }
+
+        .brand-titles span {
+            font-size: 10.5px;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-grow: 1;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 13px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-link:hover {
+            background-color: #f8fafc;
+            color: #0f172a;
+            transform: translateX(-3px);
+        }
+
+        .nav-link.active {
+            background-color: #f0f4ff;
+            color: #4338ca;
+            font-weight: 800;
+        }
+
+        .nav-indicator-box {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot-icon {
+            width: 6px;
+            height: 6px;
+            background-color: #4338ca;
+            border-radius: 50%;
+        }
+
+        .bar-icon {
+            width: 3.5px;
+            height: 16px;
+            background-color: #4338ca;
+            border-radius: 3px;
+        }
+
+        .nav-empty-box {
+            width: 16px;
+            height: 16px;
+            background-color: #f1f5f9;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .profile-badge {
+            margin-top: auto;
+            padding: 12px 16px;
+            background: #ffffff;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1.5px solid #eef2f6;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+            cursor: pointer;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            text-align: right;
+        }
+
+        .profile-info .p-name {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .profile-info .p-role {
+            font-size: 10.5px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .profile-avatar {
+            width: 38px;
+            height: 38px;
+            background: #0284c7;
+            color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 12.5px;
+        }
+
+        /* 2. المحتوى الرئيسي */
+        .main-content {
+            flex-grow: 1;
+            padding: 28px 34px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .alloc-header {
+            margin-bottom: 24px;
+        }
+
+        .alloc-header h2 {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .alloc-header p {
+            font-size: 12.5px;
+            color: #bae6fd;
+            font-weight: 600;
+        }
+
+        .toast-notification {
+            position: fixed;
+            bottom: 24px;
+            left: 36px;
+            background: #10b981;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 13.5px;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.45);
+            display: none;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
+
+        @@keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .alloc-layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 310px;
+            gap: 24px;
+        }
+
+        .building-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .building-bar {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 14px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .building-bar .title {
+            color: #0f172a;
+            font-weight: 900;
+            font-size: 14.5px;
+        }
+
+        .building-bar .stats {
+            color: #0284c7;
+            font-weight: 800;
+            font-size: 12.5px;
+        }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .room-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .room-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .room-top h4 {
+            font-size: 14px;
+            font-weight: 900;
+            color: #0f172a;
+        }
+
+        .room-badge {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 12px;
+            border-radius: 14px;
+        }
+
+        .badge-partial { background: #fef3c7; color: #b45309; }
+        .badge-full { background: #fee2e2; color: #ef4444; }
+        .badge-empty { background: #dcfce7; color: #15803d; }
+
+        .beds-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .bed-slot {
+            border-radius: 12px;
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 11.5px;
+            font-weight: 700;
+            position: relative;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bed-slot.dropzone {
+            background: #ecfdf5;
+            border: 2px dashed #10b981;
+            color: #059669;
+            font-weight: 800;
+        }
+
+        .bed-slot.drag-over {
+            background: #e0e7ff !important;
+            border: 2px dashed #4f46e5 !important;
+            transform: scale(1.08) !important;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+        }
+
+        .bed-slot.occupied {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            color: #166534;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+        }
+
+        .bed-slot.occupied .btn-delete-student {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 20px;
+            height: 20px;
+            background: #fee2e2;
+            color: #ef4444;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .bed-slot.occupied .btn-delete-student:hover {
+            background: #ef4444;
+            color: #ffffff;
+            transform: scale(1.15);
+        }
+
+        .ready-students-panel {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 22px 18px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            height: fit-content;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 2px;
+            text-align: right;
+        }
+
+        .students-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 120px;
+        }
+
+        .student-drag-card {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            cursor: grab;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .student-drag-card:active {
+            cursor: grabbing;
+            opacity: 0.6;
+            transform: scale(0.95);
+        }
+
+        .student-drag-card:hover {
+            transform: translateX(-4px) scale(1.03);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: #06b6d4;
+        }
+
+        .student-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .student-card-header .s-name {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .student-card-sub {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .badge-paid {
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- 1. القائمة الجانبية -->
+        <aside class="sidebar">
+            <div class="brand-section">
+                <div class="brand-titles">
+                    <h1>سَكَنُ الطلاب</h1>
+                    <span>نظام التسكين والإدارة</span>
+                </div>
+                <div class="brand-cube"></div>
+            </div>
+
+            <ul class="nav-list">
+                <li>
+                    <a href="/Home" class="nav-link">
+                        <span>لوحة المراقبة العامة</span>
+                        <div class="nav-empty-box"></div>
+                    </a>
+                </li>
+                <li>
+                    <a href="/Requests" class="nav-link">
+                        <span>تدقيق واعتماد الطلبات</span>
+                        <div class="nav-empty-box"></div>
+                    </a>
+                </li>
+                <li>
+                    <a href="/Allocations" class="nav-link active">
+                        <span>إدارة الأسرة والتسكين</span>
+                        <div class="nav-indicator-box">
+                            <span class="dot-icon"></span>
+                            <span class="bar-icon"></span>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="profile-badge">
+                <div class="profile-info">
+                    <span class="p-name">أ. فهد الأحمد</span>
+                    <span class="p-role">المشرف المالي</span>
+                </div>
+                <div class="profile-avatar">FA</div>
+            </div>
+        </aside>
+
+        <!-- 2. المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="alloc-header">
+                <h2>إدارة تسكين الطلاب وتوزيع الأسرة</h2>
+                <p>اسحب بطاقة أي طالب مسدد وأفلتها على السرير الشاغر لتسكينه فوراً وحفظه دائماً، أو انقر ❌ لإخلاء السرير</p>
+            </div>
+
+            <div class="alloc-layout-grid">
+                <!-- الغرف والمباني -->
+                <div class="building-container">
+                    <div class="building-bar">
+                        <span class="title">مبنى سكن الطلاب (أ) - الطابق الأول</span>
+                        <span class="stats" id="total-stats">إجمالي الغرف: 4 | الأسرة الشاغرة: <strong id="vacant-count">@vacantCount</strong></span>
+                    </div>
+
+                    <div class="rooms-grid">
+                        @for (int roomNum = 101; roomNum <= 104; roomNum++)
+                        {
+                            var rStr = roomNum.ToString();
+                            var roomBeds = Model != null ? Model.Where(b => b.Room != null && b.Room.RoomNumber == rStr).ToList() : new();
+                            int occInRoom = roomBeds.Count(b => b.IsOccupied);
+                            string badgeClass = occInRoom == 4 ? "badge-full" : (occInRoom == 0 ? "badge-empty" : "badge-partial");
+                            string badgeText = occInRoom == 4 ? "ممتلئة" : (occInRoom == 0 ? "فارغة" : $"مشغولة ({occInRoom}/4)");
+
+                            <div class="room-card" data-room="@roomNum">
+                                <div class="room-top">
+                                    <h4>غرفة @roomNum (رباعية)</h4>
+                                    <span class="room-badge @badgeClass">@badgeText</span>
+                                </div>
+                                <div class="beds-2x2">
+                                    @foreach (var bedLetter in new[] { "A", "B", "C", "D" })
+                                    {
+                                        var currentBed = roomBeds.FirstOrDefault(b => b.BedNumber == bedLetter);
+                                        bool isOcc = currentBed != null && currentBed.IsOccupied;
+                                        string studentText = isOcc ? (currentBed!.CurrentStudentId ?? "طالب مسكن") : "أفلت هنا للتسكين";
+
+                                        if (isOcc)
+                                        {
+                                            <div class="bed-slot occupied" data-bed="@roomNum-@bedLetter" data-student="@studentText">
+                                                <button class="btn-delete-student" title="إخلاء هذا السرير" onclick="unassignBed(this, '@roomNum', '@bedLetter')">✕</button>
+                                                <div style="font-weight: 800;">سرير @bedLetter</div>
+                                                <div class="student-label" style="font-size: 11px; font-weight: 800;">@studentText</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="bed-slot dropzone" data-bed="@roomNum-@bedLetter" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '@roomNum', '@bedLetter')">
+                                                <div style="font-weight: 800;">سرير @bedLetter</div>
+                                                <div class="student-label">أفلت هنا للتسكين</div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- قائمة الطلاب الجاهزين للتسكين -->
+                <div class="ready-students-panel">
+                    <div class="panel-title" id="students-count-title">طلاب جاهزون للتسكين (@readyStudents.Count)</div>
+
+                    <div class="students-list-container" id="ready-students-list">
+                        @if (readyStudents.Any())
+                        {
+                            foreach (var s in readyStudents)
+                            {
+                                var studentName = s.Student != null ? s.Student.Name : $"طالب {s.StudentId}";
+                                <div class="student-drag-card" draggable="true" ondragstart="handleDragStart(event)" data-id="@s.StudentId" data-name="@studentName" data-college="@(s.Student?.College ?? "كلية الحاسب")" data-gpa="4.80">
+                                    <div class="student-card-header">
+                                        <span class="s-name">@studentName</span>
+                                        <span class="badge-paid">معتمد مالياً</span>
+                                    </div>
+                                    <div class="student-card-sub">@(s.Student?.College ?? "كلية الحاسب") • @s.StudentId</div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div style="color: #94a3b8; font-size: 11.5px; text-align: center; padding: 20px 8px; font-weight: 700; line-height: 1.6;">
+                                جميع الطلاب المعتمدين تم تسكينهم في الأسرة بنجاح! ✔
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast" class="toast-notification"></div>
+
+    <script>
+        let draggedStudentData = null;
+
+        function handleDragStart(e) {
+            const card = e.currentTarget;
+            draggedStudentData = {
+                id: card.dataset.id,
+                name: card.dataset.name,
+                college: card.dataset.college,
+                gpa: card.dataset.gpa
+            };
+            e.dataTransfer.setData("text/plain", JSON.stringify(draggedStudentData));
+            e.dataTransfer.effectAllowed = "move";
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            const slot = e.currentTarget;
+            if (!slot.classList.contains("occupied")) {
+                slot.classList.add("drag-over");
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove("drag-over");
+        }
+
+        async function handleDrop(e, roomNum, bedLetter) {
+            e.preventDefault();
+            const slot = e.currentTarget;
+            slot.classList.remove("drag-over");
+
+            if (slot.classList.contains("occupied")) return;
+
+            let data = draggedStudentData;
+            if (!data) {
+                try { data = JSON.parse(e.dataTransfer.getData("text/plain")); } catch(err) {}
+            }
+            if (!data) return;
+
+            // تحديث الواجهة فوراً
+            slot.classList.remove("dropzone");
+            slot.classList.add("occupied");
+            slot.dataset.student = `${data.name} (${data.id})`;
+            slot.dataset.college = data.college;
+            slot.dataset.gpa = data.gpa;
+
+            slot.innerHTML = `
+                <button class="btn-delete-student" title="إخلاء هذا السرير" onclick="unassignBed(this, '${roomNum}', '${bedLetter}')">✕</button>
+                <div style="font-weight: 800;">سرير ${bedLetter}</div>
+                <div class="student-label" style="font-size: 11px; font-weight: 800;">${data.name}</div>
+            `;
+
+            document.querySelectorAll('.student-drag-card').forEach(c => {
+                if (c.dataset.id === data.id || c.dataset.name === data.name) c.remove();
+            });
+
+            updateCounts();
+            showToast(`تم تسكين الطالب "${data.name}" بنجاح في الغرفة ${roomNum} - سرير ${bedLetter} ✔`);
+
+            // حفظ دائم في الباك إند وقاعدة البيانات والديسك عبر AJAX
+            try {
+                const formData = new FormData();
+                formData.append('roomNumber', roomNum);
+                formData.append('bedLetter', bedLetter);
+                formData.append('studentId', data.id);
+                formData.append('studentName', data.name);
+                await fetch('/Allocations/AssignAjax', { method: 'POST', body: formData });
+            } catch(err) {
+                console.error("Save error:", err);
+            }
+        }
+
+        async function unassignBed(btn, roomNum, bedLetter) {
+            const slot = btn.closest('.bed-slot');
+            const studentText = slot.dataset.student || '';
+            const studentName = studentText.split('(')[0].trim() || 'الطالب';
+
+            slot.classList.remove("occupied");
+            slot.classList.add("dropzone");
+            delete slot.dataset.student;
+
+            slot.innerHTML = `
+                <div style="font-weight: 800;">سرير ${bedLetter}</div>
+                <div class="student-label">أفلت هنا للتسكين</div>
+            `;
+            slot.setAttribute('ondragover', 'handleDragOver(event)');
+            slot.setAttribute('ondragleave', 'handleDragLeave(event)');
+            slot.setAttribute('ondrop', `handleDrop(event, '${roomNum}', '${bedLetter}')`);
+
+            updateCounts();
+            showToast(`تم إخلاء السرير وإعادة الطالب "${studentName}" لقائمة الجاهزين 🔄`);
+
+            // إرسال الحفظ الدائم للباك إند
+            try {
+                const formData = new FormData();
+                formData.append('roomNumber', roomNum);
+                formData.append('bedLetter', bedLetter);
+                await fetch('/Allocations/UnassignAjax', { method: 'POST', body: formData });
+                setTimeout(() => { window.location.reload(); }, 600);
+            } catch(err) {
+                console.error("Unassign error:", err);
+            }
+        }
+
+        function updateCounts() {
+            const remaining = document.querySelectorAll('.student-drag-card').length;
+            document.getElementById('students-count-title').innerText = `طلاب جاهزون للتسكين (${remaining})`;
+            const vacant = document.querySelectorAll('.bed-slot.dropzone').length;
+            document.getElementById('vacant-count').innerText = vacant;
+
+            document.querySelectorAll('.room-card').forEach(card => {
+                const total = card.querySelectorAll('.bed-slot').length;
+                const occ = card.querySelectorAll('.bed-slot.occupied').length;
+                const badge = card.querySelector('.room-badge');
+                if (occ === total) {
+                    badge.className = 'room-badge badge-full';
+                    badge.innerText = 'ممتلئة';
+                } else if (occ === 0) {
+                    badge.className = 'room-badge badge-empty';
+                    badge.innerText = 'فارغة';
+                } else {
+                    badge.className = 'room-badge badge-partial';
+                    badge.innerText = `مشغولة (${occ}/${total})`;
+                }
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,758 @@
+@model IEnumerable<StudentAccommodation.Domain.Entities.AccommodationRequest>
+@{
+    Layout = null;
+    int totalCount = Model != null ? Model.Count() : 0;
+    int approvedAcademic = Model != null ? Model.Count(r => r.AcademicStatus == "Approved") : 0;
+    int approvedSecurity = Model != null ? Model.Count(r => r.SecurityStatus == "Approved") : 0;
+    int pendingReceipt = Model != null ? Model.Count(r => !string.IsNullOrEmpty(r.BankReceiptPath) && r.FinanceStatus == "Pending") : 0;
+}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تدقيق الطلبات الواردة - سَكَنُ الطلاب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        html, body {
+            background-color: #0E1E70 !important;
+            color: #ffffff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            direction: rtl;
+        }
+
+        .dashboard-container {
+            display: flex;
+            flex-direction: row;
+            min-height: 100vh;
+            background-color: #0E1E70;
+        }
+
+        /* 1. القائمة الجانبية البيضاء */
+        .sidebar {
+            width: 250px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 18px 24px 18px;
+            flex-shrink: 0;
+            min-height: 100vh;
+            box-shadow: -4px 0 25px rgba(0,0,0,0.06);
+            z-index: 10;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            padding: 0 4px 34px 4px;
+        }
+
+        .brand-cube {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(145deg, #0284c7, #2563eb);
+            clip-path: polygon(20% 0%, 100% 15%, 80% 100%, 0% 85%);
+            border-radius: 6px;
+        }
+
+        .brand-titles h1 {
+            font-size: 18px;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1.1;
+        }
+
+        .brand-titles span {
+            font-size: 10.5px;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-grow: 1;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 13px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-link:hover {
+            background-color: #f8fafc;
+            color: #0f172a;
+            transform: translateX(-3px);
+        }
+
+        .nav-link.active {
+            background-color: #f0f4ff;
+            color: #4338ca;
+            font-weight: 800;
+        }
+
+        .nav-indicator-box {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot-icon {
+            width: 6px;
+            height: 6px;
+            background-color: #4338ca;
+            border-radius: 50%;
+        }
+
+        .bar-icon {
+            width: 3.5px;
+            height: 16px;
+            background-color: #4338ca;
+            border-radius: 3px;
+        }
+
+        .nav-empty-box {
+            width: 16px;
+            height: 16px;
+            background-color: #f1f5f9;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .profile-badge {
+            margin-top: auto;
+            padding: 12px 16px;
+            background: #ffffff;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1.5px solid #eef2f6;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+        }
+
+        .profile-badge:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border-color: #cbd5e1;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            text-align: right;
+        }
+
+        .profile-info .p-name {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .profile-info .p-role {
+            font-size: 10.5px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .profile-avatar {
+            width: 38px;
+            height: 38px;
+            background: #0284c7;
+            color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 12.5px;
+            box-shadow: 0 3px 8px rgba(2, 132, 199, 0.3);
+        }
+
+        /* 2. المحتوى الرئيسي */
+        .main-content {
+            flex-grow: 1;
+            padding: 28px 34px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .auditing-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header-text {
+            text-align: right;
+        }
+
+        .header-text h2 {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .header-text p {
+            font-size: 12.5px;
+            color: #bae6fd;
+            font-weight: 600;
+        }
+
+        .search-bar-box {
+            position: relative;
+            width: 340px;
+        }
+
+        .search-bar-box input {
+            width: 100%;
+            background: #ffffff;
+            border: 2px solid transparent;
+            border-radius: 24px;
+            padding: 11px 42px 11px 20px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            font-family: 'Cairo';
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .search-bar-box input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
+        }
+
+        .search-bar-box .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 11px;
+            font-size: 16px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .audit-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .audit-card:hover {
+            transform: translateY(-6px) scale(1.04);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16);
+        }
+
+        .audit-card .card-text {
+            text-align: right;
+        }
+
+        .audit-card .c-title {
+            font-size: 11.5px;
+            color: #64748b;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .audit-card .c-number {
+            font-size: 27px;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1;
+        }
+
+        .c-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .table-box {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .audit-table-exact {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .audit-table-exact th {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: #0f172a;
+            padding: 14px 12px;
+            text-align: right;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .audit-table-exact tbody tr {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .audit-table-exact tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .audit-table-exact td {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            padding: 16px 12px;
+            border-bottom: 1px solid #f8fafc;
+            text-align: right;
+        }
+
+        .pill-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 16px;
+            font-size: 11.5px;
+            font-weight: 800;
+        }
+
+        .pill-green {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .pill-amber {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .pill-gray {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .btn-review-receipt {
+            background: linear-gradient(90deg, #2563eb, #1d4ed8);
+            color: #ffffff !important;
+            padding: 9px 20px;
+            border-radius: 14px;
+            font-size: 12.5px;
+            font-weight: 800;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-review-receipt:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.5);
+            background: linear-gradient(90deg, #1d4ed8, #1e40af);
+        }
+
+        .btn-preview-req {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1.5px solid #86efac;
+            padding: 8px 18px;
+            border-radius: 14px;
+            font-size: 12.5px;
+            font-weight: 800;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+        }
+
+        .btn-preview-req:hover {
+            background: #bbf7d0;
+            transform: translateY(-2px);
+        }
+
+        /* نافذة المراجعة المنبثقة (Modal) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(6px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 24px;
+            width: 520px;
+            max-width: 90%;
+            padding: 28px 32px;
+            color: #0f172a;
+            text-align: right;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: modalFadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @@keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid #f1f5f9;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 900;
+            color: #0f172a;
+        }
+
+        .btn-close-modal {
+            background: #f1f5f9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: 800;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .receipt-card-preview {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .receipt-badge-amount {
+            background: #ecfdf5;
+            color: #047857;
+            font-size: 22px;
+            font-weight: 900;
+            padding: 10px 24px;
+            border-radius: 16px;
+            display: inline-block;
+            margin: 12px 0;
+            border: 1.5px solid #a7f3d0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-approve-direct {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: #ffffff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 14px;
+            font-size: 13.5px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+            transition: all 0.25s ease;
+        }
+
+        .btn-approve-direct:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- 1. القائمة الجانبية البيضاء -->
+        <aside class="sidebar">
+            <div class="brand-section">
+                <div class="brand-titles">
+                    <h1>سَكَنُ الطلاب</h1>
+                    <span>نظام التسكين والإدارة</span>
+                </div>
+                <div class="brand-cube"></div>
+            </div>
+
+            <ul class="nav-list">
+                <li>
+                    <a href="/Home" class="nav-link">
+                        <span>لوحة المراقبة العامة</span>
+                        <div class="nav-empty-box"></div>
+                    </a>
+                </li>
+                <li>
+                    <a href="/Requests" class="nav-link active">
+                        <span>تدقيق واعتماد الطلبات</span>
+                        <div class="nav-indicator-box">
+                            <span class="dot-icon"></span>
+                            <span class="bar-icon"></span>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a href="/Allocations" class="nav-link">
+                        <span>إدارة الأسرة والتسكين</span>
+                        <div class="nav-empty-box"></div>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="profile-badge">
+                <div class="profile-info">
+                    <span class="p-name">أ. فهد الأحمد</span>
+                    <span class="p-role">المشرف المالي</span>
+                </div>
+                <div class="profile-avatar">FA</div>
+            </div>
+        </aside>
+
+        <!-- 2. المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- الهيدر مع مربع البحث اللحظي الفعال -->
+            <div class="auditing-header">
+                <div class="header-text">
+                    <h2>تدقيق الطلبات الواردة</h2>
+                    <p>مراجعة وثائق الطلاب واعتمادها مالياً وأكاديمياً للقبول</p>
+                </div>
+
+                <div class="search-bar-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" oninput="liveSearchTable(this.value)" placeholder="بحث فوري باسم الطالب أو الرقم الجامعي..." />
+                </div>
+            </div>
+
+            <!-- صف البطاقات الإحصائية الأربعة -->
+            <div class="cards-grid">
+                <a href="/Requests" style="text-decoration: none; color: inherit;">
+                    <div class="audit-card">
+                        <div class="card-text">
+                            <div class="c-title">إجمالي الطلبات المعلقة</div>
+                            <div class="c-number">@totalCount</div>
+                        </div>
+                        <div class="c-icon" style="background: #eef2ff; color: #4f46e5;">✔</div>
+                    </div>
+                </a>
+
+                <a href="/Requests?filter=academic" style="text-decoration: none; color: inherit;">
+                    <div class="audit-card">
+                        <div class="card-text">
+                            <div class="c-title">المعتمدة أكاديمياً</div>
+                            <div class="c-number" style="color: #10b981;">@approvedAcademic</div>
+                        </div>
+                        <div class="c-icon" style="background: #ecfdf5; color: #10b981;">⭕</div>
+                    </div>
+                </a>
+
+                <a href="/Requests?filter=security" style="text-decoration: none; color: inherit;">
+                    <div class="audit-card">
+                        <div class="card-text">
+                            <div class="c-title">الموافقة الأمنية</div>
+                            <div class="c-number" style="color: #06b6d4;">@approvedSecurity</div>
+                        </div>
+                        <div class="c-icon" style="background: #ecfeff; color: #06b6d4;">▲</div>
+                    </div>
+                </a>
+
+                <a href="/Requests?filter=receipt" style="text-decoration: none; color: inherit;">
+                    <div class="audit-card">
+                        <div class="card-text">
+                            <div class="c-title">بانتظار مطابقة السند</div>
+                            <div class="c-number" style="color: #f59e0b;">@pendingReceipt</div>
+                        </div>
+                        <div class="c-icon" style="background: #fffbeb; color: #f59e0b;">■</div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- جدول التدقيق الحقيقي 100% -->
+            <div class="table-box">
+                <table class="audit-table-exact" id="requestsTable">
+                    <thead>
+                        <tr>
+                            <th>اسم الطالب</th>
+                            <th>الرقم الجامعي</th>
+                            <th>الكلية</th>
+                            <th>الحالة الأكاديمية</th>
+                            <th>التدقيق الأمني</th>
+                            <th>سند السداد</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                var studentName = item.Student != null ? item.Student.Name : $"طالب {item.StudentId}";
+                                <tr class="request-row" data-search="@studentName @item.StudentId @(item.Student?.College ?? "")">
+                                    <td style="font-weight: 800; color: #0f172a;">@studentName</td>
+                                    <td style="font-weight: 700; color: #475569;">@item.StudentId</td>
+                                    <td>@(item.Student?.College ?? "كلية علوم الحاسب والمعلومات")</td>
+                                    <td>
+                                        <span class="pill-badge pill-green">معتمد أكاديمياً</span>
+                                    </td>
+                                    <td>
+                                        <span class="pill-badge pill-green">معتمد أمنياً</span>
+                                    </td>
+                                    <td>
+                                        @if (item.FinanceStatus == "Approved")
+                                        {
+                                            <span class="pill-badge pill-green">مقبول مالياً</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="pill-badge pill-amber">بانتظار المطابقة</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.FinanceStatus != "Approved")
+                                        {
+                                            <button type="button" class="btn-review-receipt" onclick="openReceiptModal('@item.StudentId', '@studentName', '@(item.BankReceiptPath ?? "receipt_bank.jpg")')">
+                                                📄 مراجعة السند (1)
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <a href="/Allocations" class="btn-preview-req">
+                                                🛏️ تسكين بالسرير ✔
+                                            </a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: #94A3B8; padding: 32px; font-weight: 700; font-size: 13.5px;">
+                                    📌 لا توجد طلبات واردة حالياً.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- نافذة منبثقة تفاعلية لمراجعة واعتماد السند المالي -->
+    <div id="receiptModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تدقيق ومطابقة السند المالي البنكي</h3>
+                <button type="button" class="btn-close-modal" onclick="closeReceiptModal()">✕</button>
+            </div>
+
+            <div style="font-size: 13.5px; font-weight: 700; color: #334155; margin-bottom: 14px;">
+                الطالب: <span id="modalStudentName" style="color: #0f172a; font-weight: 900;"></span> 
+                (الرقم: <span id="modalStudentId" style="color: #2563eb;"></span>)
+            </div>
+
+            <div class="receipt-card-preview">
+                <div style="font-size: 12px; color: #64748b; font-weight: 800;">إيصال التحويل البنكي لحساب عمادة الإسكان</div>
+                <div class="receipt-badge-amount">1,500.00 ر.س</div>
+                <div style="font-size: 12px; color: #059669; font-weight: 800;">✔ تم التحقق من رقم العملية وتطابق الرسوم الجامعية</div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" onclick="closeReceiptModal()" style="background: #f1f5f9; color: #475569; border: none; padding: 11px 20px; border-radius: 12px; font-weight: 800; cursor: pointer;">إلغاء</button>
+                <a id="btnApproveAction" href="#" class="btn-approve-direct">
+                    ✔ اعتماد وموافقة مالية فورية
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openReceiptModal(studentId, studentName, receiptPath) {
+            document.getElementById('modalStudentId').innerText = studentId;
+            document.getElementById('modalStudentName').innerText = studentName;
+            document.getElementById('btnApproveAction').href = '/Requests/Verify?studentId=' + studentId + '&stage=finance&status=Approved';
+            document.getElementById('receiptModal').style.display = 'flex';
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receiptModal').style.display = 'none';
+        }
+
+        // ميزة البحث الفوري اللحظي
+        function liveSearchTable(query) {
+            const filter = query.toLowerCase().trim();
+            const rows = document.querySelectorAll('.request-row');
+            rows.forEach(row => {
+                const searchData = (row.getAttribute('data-search') || '').toLowerCase();
+                if (searchData.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

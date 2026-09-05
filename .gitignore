@@ -1,0 +1,35 @@
+## Visual Studio build artifacts
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Databases and Data Files (استثناء كافة ملفات وقواعد البيانات)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.mdf
+*.ldf
+*.ndf
+*.bak
+*.localdb
+App_Data/
+app_data/
+sync_*.json
+*.data
+*.sql
+
+## Rider & VS Code
+.idea/
+.vscode/
+
+## Publish
+publish/
+[Ff]ile[Ss]tore/

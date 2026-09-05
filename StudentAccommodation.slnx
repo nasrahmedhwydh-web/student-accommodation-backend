@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/StudentAccommodation.Domain/StudentAccommodation.Domain.csproj" />
+  <Project Path="src/StudentAccommodation.Application/StudentAccommodation.Application.csproj" />
+  <Project Path="src/StudentAccommodation.Infrastructure/StudentAccommodation.Infrastructure.csproj" />
+  <Project Path="src/StudentAccommodation.WebAPI/StudentAccommodation.WebAPI.csproj" />
+  <Project Path="src/StudentAccommodation.WebMVC/StudentAccommodation.WebMVC.csproj" />
+</Solution>

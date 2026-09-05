@@ -1,0 +1,640 @@
+{
+	"info": {
+		"_postman_id": "c1f7b8a9-4321-4def-9876-studenthousing2026",
+		"name": "API نظام تسكين الطلاب الذكي",
+		"description": "مجموعة طلبات Postman الشاملة لجميع الكيانات الخمسة باستخدام المتغير {{id}} حصرياً لجميع العمليات",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "1. تسجيل الدخول (Login)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": \"admin\",\n  \"password\": \"adminpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. إنشاء حساب طالب جديد (Register)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": \"443019882\",\n  \"fullName\": \"محمد سالم القحطاني\",\n  \"password\": \"Password123!\",\n  \"role\": \"Student\",\n  \"college\": \"كلية علوم الحاسب والمعلومات\",\n  \"department\": \"هندسة البرمجيات\",\n  \"gpa\": 4.85\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"register"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "1. جلب كافة المستخدمين",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/Users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Users"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. جلب مستخدم بالـ ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Users",
+								"{{id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "3. إضافة مستخدم جديد",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"443019882\",\n  \"name\": \"محمد سالم القحطاني\",\n  \"role\": \"Student\",\n  \"college\": \"كلية علوم الحاسب والمعلومات\",\n  \"department\": \"هندسة البرمجيات\",\n  \"gpa\": 4.85\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Users"
+							]
+						}
+					}
+				},
+				{
+					"name": "4. تعديل مستخدم بالـ ID",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"محمد سالم القحطاني\",\n  \"role\": \"Student\",\n  \"college\": \"كلية علوم الحاسب والمعلومات\",\n  \"department\": \"هندسة البرمجيات\",\n  \"gpa\": 4.90\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Users",
+								"{{id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "5. حذف مستخدم بالـ ID",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Users",
+								"{{id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "AccommodationRequests",
+			"item": [
+				{
+					"name": "1. جلب كافة طلبات التسكين",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/AccommodationRequests",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"AccommodationRequests"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. جلب طلب تسكين بالـ ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/AccommodationRequests/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"AccommodationRequests",
+								"{{id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "3. تقديم طلب وسند التسكين",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": \"443019882\",\n  \"fullName\": \"محمد سالم القحطاني\",\n  \"academicStatus\": \"Approved\",\n  \"academicStatusPath\": \"academic_cert.pdf\",\n  \"securityStatus\": \"Approved\",\n  \"clearanceStatusPath\": \"clearance.pdf\",\n  \"financeStatus\": \"Pending\",\n  \"bankReceiptPath\": \"receipt_1500_sar.jpg\",\n  \"allocationStatus\": \"Pending\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/AccommodationRequests/submit-student-docs",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"AccommodationRequests",
+								"submit-student-docs"
+							]
+						}
+					}
+				},
+				{
+					"name": "4. اعتماد السند المالي للطلب بالـ ID",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": \"443019882\",\n  \"fullName\": \"محمد سالم القحطاني\",\n  \"academicStatus\": \"Approved\",\n  \"securityStatus\": \"Approved\",\n  \"financeStatus\": \"Approved\",\n  \"bankReceiptPath\": \"receipt_1500_sar.jpg\",\n  \"allocationStatus\": \"ReadyForBed\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/AccommodationRequests/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"AccommodationRequests",
+								"{{id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "5. حذف طلب تسكين بالـ ID",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/api/AccommodationRequests/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"AccommodationRequests",
+								"{{id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Rooms",
+			"item": [
+				{
+					"name": "1. جلب كافة الغرف",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/Rooms",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Rooms"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. جلب تفاصيل غرفة بالـ ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/Rooms/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Rooms",
+								"{{id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "3. إضافة غرفة جديدة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"roomNumber\": \"105\",\n  \"building\": \"مبنى أ\",\n  \"floor\": 1,\n  \"capacity\": 4\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Rooms",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Rooms"
+							]
+						}
+					}
+				},
+				{
+					"name": "4. تعديل غرفة بالـ ID",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"roomNumber\": \"105\",\n  \"building\": \"مبنى أ\",\n  \"floor\": 1,\n  \"capacity\": 4\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Rooms/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Rooms",
+								"{{id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "5. حذف غرفة وأسرتها بالـ ID",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/api/Rooms/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Rooms",
+								"{{id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Beds",
+			"item": [
+				{
+					"name": "1. جلب كافة الأسرة",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/Beds",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Beds"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. جلب تفاصيل سرير بالـ ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/Beds/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Beds",
+								"{{id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "3. جلب الأسرة الشاغرة فقط",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/Beds/vacant",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Beds",
+								"vacant"
+							]
+						}
+					}
+				},
+				{
+					"name": "4. تسكين طالب في سرير (Allocate)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bedId\": 1,\n  \"studentId\": \"443019882\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Beds/allocate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Beds",
+								"allocate"
+							]
+						}
+					}
+				},
+				{
+					"name": "5. إخلاء سرير (Unassign)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bedId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Beds/unassign",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Beds",
+								"unassign"
+							]
+						}
+					}
+				},
+				{
+					"name": "6. حذف سرير بالـ ID",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/api/Beds/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Beds",
+								"{{id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "MaintenanceTickets",
+			"item": [
+				{
+					"name": "1. جلب كافة بلاغات الصيانة",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/MaintenanceTickets",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"MaintenanceTickets"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. جلب بلاغ صيانة بالـ ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/MaintenanceTickets/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"MaintenanceTickets",
+								"{{id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "3. رفع بلاغ صيانة جديد",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": \"443019882\",\n  \"title\": \"عطل في مكيف الغرفة 101\",\n  \"description\": \"المكيف بحاجة إلى صيانة وضبط التبريد\",\n  \"priority\": \"High\",\n  \"status\": \"Open\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/MaintenanceTickets",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"MaintenanceTickets"
+							]
+						}
+					}
+				},
+				{
+					"name": "4. تحديث حالة بلاغ الصيانة بالـ ID",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"عطل في مكيف الغرفة 101\",\n  \"description\": \"تم الإصلاح بنجاح\",\n  \"status\": \"Completed\",\n  \"priority\": \"Normal\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/MaintenanceTickets/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"MaintenanceTickets",
+								"{{id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "5. حذف بلاغ الصيانة بالـ ID",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/api/MaintenanceTickets/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"MaintenanceTickets",
+								"{{id}}"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://localhost:62129",
+			"type": "string"
+		},
+		{
+			"key": "id",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}

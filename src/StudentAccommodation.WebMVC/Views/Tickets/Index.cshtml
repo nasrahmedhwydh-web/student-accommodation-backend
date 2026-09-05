@@ -1,0 +1,505 @@
+@model IEnumerable<StudentAccommodation.Domain.Entities.MaintenanceTicket>
+@{
+    Layout = null;
+    int openCount = Model != null ? Model.Count(t => t.Status == "Open") : 0;
+    int closedCount = Model != null ? Model.Count(t => t.Status == "Closed") : 0;
+}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>مركز الدعم الفني والبلاغات - سَكَنُ الطلاب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        html, body {
+            background-color: #0E1E70 !important;
+            color: #ffffff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            direction: rtl;
+        }
+
+        .dashboard-container {
+            display: flex;
+            flex-direction: row;
+            min-height: 100vh;
+            background-color: #0E1E70;
+        }
+
+        /* 1. القائمة الجانبية */
+        .sidebar {
+            width: 250px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 18px 24px 18px;
+            flex-shrink: 0;
+            min-height: 100vh;
+            box-shadow: -4px 0 25px rgba(0,0,0,0.06);
+            z-index: 10;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            padding: 0 4px 34px 4px;
+        }
+
+        .brand-cube {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(145deg, #0284c7, #2563eb);
+            clip-path: polygon(20% 0%, 100% 15%, 80% 100%, 0% 85%);
+            border-radius: 6px;
+        }
+
+        .brand-titles h1 {
+            font-size: 18px;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1.1;
+        }
+
+        .brand-titles span {
+            font-size: 10.5px;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-grow: 1;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 13px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-link:hover {
+            background-color: #f8fafc;
+            color: #0f172a;
+            transform: translateX(-3px);
+        }
+
+        .nav-link.active {
+            background-color: #f0f4ff;
+            color: #4338ca;
+            font-weight: 800;
+        }
+
+        .nav-indicator-box {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot-icon {
+            width: 6px;
+            height: 6px;
+            background-color: #4338ca;
+            border-radius: 50%;
+        }
+
+        .bar-icon {
+            width: 3.5px;
+            height: 16px;
+            background-color: #4338ca;
+            border-radius: 3px;
+        }
+
+        .nav-empty-box {
+            width: 16px;
+            height: 16px;
+            background-color: #f1f5f9;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .profile-badge {
+            margin-top: auto;
+            padding: 12px 16px;
+            background: #ffffff;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1.5px solid #eef2f6;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            text-align: right;
+        }
+
+        .profile-info .p-name {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .profile-info .p-role {
+            font-size: 10.5px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .profile-avatar {
+            width: 38px;
+            height: 38px;
+            background: #0284c7;
+            color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 12.5px;
+        }
+
+        /* 2. المحتوى الرئيسي */
+        .main-content {
+            flex-grow: 1;
+            padding: 28px 34px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .tickets-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header-text h2 {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .header-text p {
+            font-size: 12.5px;
+            color: #bae6fd;
+            font-weight: 600;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+
+        .stat-card .c-title {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .c-number {
+            font-size: 28px;
+            font-weight: 900;
+            color: #0f172a;
+        }
+
+        .tickets-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .ticket-item {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 22px 26px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .ticket-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
+        }
+
+        .student-badge-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .student-name {
+            font-size: 16px;
+            font-weight: 900;
+            color: #0f172a;
+        }
+
+        .student-id {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        .room-tag {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 11.5px;
+            font-weight: 800;
+        }
+
+        .status-pill {
+            padding: 5px 16px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .pill-open { background: #fee2e2; color: #ef4444; }
+        .pill-closed { background: #dcfce7; color: #15803d; }
+
+        .ticket-desc {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.6;
+            background: #f8fafc;
+            padding: 16px 20px;
+            border-radius: 16px;
+            border-right: 4px solid #3b82f6;
+        }
+
+        .admin-reply-box {
+            background: #ecfdf5;
+            padding: 16px 20px;
+            border-radius: 16px;
+            border-right: 4px solid #10b981;
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #065f46;
+        }
+
+        .reply-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .reply-input {
+            flex-grow: 1;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px 18px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            outline: none;
+            font-family: 'Cairo';
+        }
+
+        .reply-input:focus {
+            border-color: #3b82f6;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .btn-reply-send {
+            background: linear-gradient(90deg, #2563eb, #1d4ed8);
+            color: #ffffff;
+            border: none;
+            padding: 12px 26px;
+            border-radius: 14px;
+            font-size: 13.5px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+            transition: all 0.25s ease;
+        }
+
+        .btn-reply-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- 1. القائمة الجانبية -->
+        <aside class="sidebar">
+            <div class="brand-section">
+                <div class="brand-titles">
+                    <h1>سَكَنُ الطلاب</h1>
+                    <span>نظام التسكين والإدارة</span>
+                </div>
+                <div class="brand-cube"></div>
+            </div>
+
+            <ul class="nav-list">
+                <li>
+                    <a href="/Home" class="nav-link">
+                        <span>لوحة المراقبة العامة</span>
+                        <div class="nav-empty-box"></div>
+                    </a>
+                </li>
+                <li>
+                    <a href="/Requests" class="nav-link">
+                        <span>تدقيق واعتماد الطلبات</span>
+                        <div class="nav-empty-box"></div>
+                    </a>
+                </li>
+                <li>
+                    <a href="/Allocations" class="nav-link">
+                        <span>إدارة الأسرة والتسكين</span>
+                        <div class="nav-empty-box"></div>
+                    </a>
+                </li>
+                <li>
+                    <a href="/Tickets" class="nav-link active">
+                        <span>الدعم الفني والمحادثات</span>
+                        <div class="nav-indicator-box">
+                            <span class="dot-icon"></span>
+                            <span class="bar-icon"></span>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="profile-badge">
+                <div class="profile-info">
+                    <span class="p-name">أ. فهد الأحمد</span>
+                    <span class="p-role">المشرف المالي</span>
+                </div>
+                <div class="profile-avatar">FA</div>
+            </div>
+        </aside>
+
+        <!-- 2. المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="tickets-header">
+                <div class="header-text">
+                    <h2>مركز الدعم الفني والبلاغات المباشرة</h2>
+                    <p>متابعة استفسارات وبلاغات الطلاب والرد الفوري عليها مع تفاصيل الغرفة والمبنى</p>
+                </div>
+            </div>
+
+            <div class="cards-grid">
+                <div class="stat-card">
+                    <div>
+                        <div class="c-title">البلاغات والاستفسارات المفتوحة</div>
+                        <div class="c-number" style="color: #ef4444;">@openCount</div>
+                    </div>
+                    <div style="font-size: 24px;">🔴</div>
+                </div>
+
+                <div class="stat-card">
+                    <div>
+                        <div class="c-title">الاستفسارات التي تم الرد عليها</div>
+                        <div class="c-number" style="color: #10b981;">@closedCount</div>
+                    </div>
+                    <div style="font-size: 24px;">🟢</div>
+                </div>
+            </div>
+
+            <div class="tickets-container">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var ticket in Model)
+                    {
+                        <div class="ticket-item">
+                            <div class="ticket-top">
+                                <div class="student-badge-title">
+                                    <span class="student-name">@(ticket.StudentName ?? "علي")</span>
+                                    <span class="student-id">(@ticket.StudentId)</span>
+                                    <span class="room-tag">🏢 @(ticket.RoomInfo ?? "مبنى أ - غرفة 102 (سرير B)")</span>
+                                </div>
+                                <div>
+                                    @if (ticket.Status == "Open")
+                                    {
+                                        <span class="status-pill pill-open">بانتظار رد المشرف</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-pill pill-closed">تم الرد والمعالجة ✔</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="ticket-desc">
+                                💬 <strong>رسالة الطالب:</strong> @ticket.Description
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(ticket.AdminReply))
+                            {
+                                <div class="admin-reply-box">
+                                    👨‍💼 <strong>رد المشرف:</strong> @ticket.AdminReply
+                                </div>
+                            }
+                            else
+                            {
+                                <form method="post" action="/Tickets/Reply" class="reply-form">
+                                    <input type="hidden" name="id" value="@ticket.Id" />
+                                    <input type="text" name="replyText" class="reply-input" placeholder="اكتب ردك الرسمي للطالب هنا..." required />
+                                    <button type="submit" class="btn-reply-send">إرسال الرد 💬</button>
+                                </form>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div style="background: white; border-radius: 20px; padding: 40px; text-align: center; color: #94a3b8; font-weight: 700;">
+                        📌 لا توجد استفسارات أو بلاغات حالياً.
+                    </div>
+                }
+            </div>
+        </main>
+    </div>
+</body>
+</html>
